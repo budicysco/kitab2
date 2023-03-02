@@ -13,6 +13,12 @@ dependencies:
   cupertino_icons: ^1.0.2
   flutter_native_splash: ^2.2.18
   adaptive_theme: ^3.2.0
+  adhan: ^2.0.0-nullsafety.2
+  intl: ^0.18.0
+  location: ^4.4.0
+  geocoding: ^2.0.5
+  # geocoder: ^0.2.1
+  # flutter_geocoder: ^0.2.2-nullsafety
 
 dev_dependencies:
   flutter_test:

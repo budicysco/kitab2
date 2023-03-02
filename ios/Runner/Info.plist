@@ -49,5 +49,7 @@
 		<true/>
 		<key>UIStatusBarHidden</key>
 		<false/>
+		<key>NSLocationWhenInUseUsageDescription</key>
+    	<string>Your location is required for adhan times.</string>
 	</dict>
 </plist>
