@@ -11,9 +11,9 @@ import 'package:geocoding/geocoding.dart' as gc;
 // import 'package:flutter_geocoder/geocoder.dart' as gc;
 
 int _dayIndex = 0;
-Color? _colorBar;
+Color _colorBar1 = Colors.transparent, _colorBar2 = Colors.transparent;
 
-double? _latitude, _longitude, _qibla;
+double _latitude = 0, _longitude = 0, _qibla = 0;
 DateTime _fajrTime = DateTime.now(),
     _dhuhrTime = DateTime.now(),
     _asrTime = DateTime.now(),
@@ -77,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: _colorBar,
+        backgroundColor: _colorBar1,
         actions: [
           PopupMenuButton(
             itemBuilder: (context) {
@@ -96,15 +96,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: const Text("Color"),
                   onTap: () {
                     if (_dayIndex == 0) {
-                      _colorBar = Colors.deepPurple.shade400;
+                      _colorBar1 = Colors.deepPurple.shade400;
                     } else if (_dayIndex == 1) {
-                      _colorBar = Colors.green.shade400;
+                      _colorBar1 = Colors.green.shade400;
                     } else if (_dayIndex == 2) {
-                      _colorBar = Colors.amber.shade600;
+                      _colorBar1 = Colors.amber.shade600;
                     } else if (_dayIndex == 3) {
-                      _colorBar = Colors.deepOrange.shade300;
+                      _colorBar1 = Colors.deepOrange.shade300;
                     } else {
-                      _colorBar = Colors.indigo.shade400;
+                      _colorBar1 = Colors.indigo.shade400;
                     }
                     _dayIndex++;
                     if (_dayIndex > 4) {
@@ -125,7 +125,15 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 200,
               padding: const EdgeInsets.symmetric(horizontal: 15),
               decoration: BoxDecoration(
-                color: _colorBar,
+                // color: _colorBar,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    _colorBar1,
+                    _colorBar2,
+                  ],
+                ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(25),
                   bottomRight: Radius.circular(25),
@@ -176,6 +184,30 @@ class _MyHomePageState extends State<MyHomePage> {
             Text('midnight: ${DateFormat.Hm().format(_midNight)}'),
             Text('thirdnight: ${DateFormat.Hm().format(_thirdNight)}'),
             Text('qibla direction: $_qibla'),
+            Container(
+              decoration: BoxDecoration(color: Colors.blueGrey),
+              height: 100,
+            ),
+            Container(
+              decoration: BoxDecoration(color: Colors.grey),
+              height: 100,
+            ),
+            Container(
+              decoration: BoxDecoration(color: Colors.blueGrey),
+              height: 100,
+            ),
+            Container(
+              decoration: BoxDecoration(color: Colors.grey),
+              height: 100,
+            ),
+            Container(
+              decoration: BoxDecoration(color: Colors.blueGrey),
+              height: 100,
+            ),
+            Container(
+              decoration: BoxDecoration(color: Colors.grey),
+              height: 100,
+            ),
           ]),
         ),
       ),
@@ -187,19 +219,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
     int time = int.parse(DateFormat.H().format(DateTime.now()));
     if (time >= 3 && time < 6) {
-      _colorBar = Colors.deepPurple.shade400;
+      _colorBar1 = Colors.deepPurple.shade400;
       _dayIndex = 0;
     } else if (time >= 6 && time < 15) {
-      _colorBar = Colors.green.shade400;
+      _colorBar1 = Colors.green.shade400;
       _dayIndex = 1;
     } else if (time >= 15 && time < 18) {
-      _colorBar = Colors.amber.shade600;
+      _colorBar1 = Colors.amber.shade600;
       _dayIndex = 2;
     } else if (time >= 18 && time < 20) {
-      _colorBar = Colors.deepOrange.shade300;
+      _colorBar1 = Colors.deepOrange.shade400;
+      _colorBar2 = Colors.yellow.shade600;
       _dayIndex = 3;
     } else {
-      _colorBar = Colors.indigo.shade400;
+      _colorBar1 = Colors.indigo.shade400;
       _dayIndex = 4;
     }
 
@@ -230,13 +263,13 @@ class _MyHomePageState extends State<MyHomePage> {
     _longitude = locationData.longitude!;
 
     List<gc.Placemark> placemarks =
-        await gc.placemarkFromCoordinates(_latitude ?? 0, _longitude ?? 0);
+        await gc.placemarkFromCoordinates(_latitude, _longitude);
 
     _cityName = placemarks.first.locality ?? '';
 
     //### adhan ###
 
-    final myCoordinates = Coordinates(_latitude ?? 0, _longitude ?? 0);
+    final myCoordinates = Coordinates(_latitude, _longitude);
     final params = CalculationMethod.singapore.getParameters();
     params.madhab = Madhab.shafi;
     final prayerTimes = PrayerTimes.today(myCoordinates, params);
@@ -263,8 +296,8 @@ class _MyHomePageState extends State<MyHomePage> {
   void whatTime() {
     //### whatime ###
     final now = DateTime.now();
-    Duration? nextDuration;
-    String? nextEventName;
+    Duration nextDuration = Duration.zero;
+    String nextEventName = '';
 
     if (now.isBefore(_isyraqTime)) {
       _nowEvent = 'Subuh';
@@ -296,7 +329,7 @@ class _MyHomePageState extends State<MyHomePage> {
       nextEventName = 'Subuh';
     }
 
-    if (nextDuration!.inHours > 0) {
+    if (nextDuration.inHours > 0) {
       _nextEvent = '${nextDuration.inHours} jam ';
     } else {
       _nextEvent = '';
