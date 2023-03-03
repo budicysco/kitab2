@@ -1,5 +1,6 @@
-import 'package:flutter/material.dart';
 import 'dart:async';
+
+import 'package:flutter/material.dart';
 
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:adaptive_theme/adaptive_theme.dart';
@@ -7,24 +8,21 @@ import 'package:adhan/adhan.dart';
 import 'package:intl/intl.dart';
 import 'package:location/location.dart';
 import 'package:geocoding/geocoding.dart' as gc;
-// import 'package:geocoder/geocoder.dart';
-// import 'package:flutter_geocoder/geocoder.dart' as gc;
 
-int _dayIndex = 0;
-Color _colorBar1 = Colors.transparent, _colorBar2 = Colors.transparent;
+Color _colorTop = const Color(0xff67d3ef),
+    _colorBottom = const Color(0xffbdf9ff);
+String _nowEvent = '', _nextEvent = '', _cityName = '';
 
 double _latitude = 0, _longitude = 0, _qibla = 0;
-DateTime _fajrTime = DateTime.now(),
-    _dhuhrTime = DateTime.now(),
-    _asrTime = DateTime.now(),
-    _maghribTime = DateTime.now(),
-    _ishaTime = DateTime.now(),
-    _midNight = DateTime.now(),
-    _thirdNight = DateTime.now(),
-    _isyraqTime = DateTime.now();
-// _dhuhaTime = DateTime.now();
 
-String _nowEvent = '', _nextEvent = '', _cityName = '';
+DateTime _fajr = DateTime.now(),
+    _sunrise = DateTime.now(),
+    _dhuhr = DateTime.now(),
+    _asr = DateTime.now(),
+    _maghrib = DateTime.now(),
+    _isha = DateTime.now(),
+    _midnight = DateTime.now(),
+    _latenight = DateTime.now();
 
 void main() {
   runApp(const MyApp());
@@ -64,12 +62,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void initState() {
-    super.initState();
+    setColor();
     initialization();
+
     timer = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
-      whatTime();
-      setState(() {});
+      // whatTime();
+      // setState(() {});
     });
+
+    super.initState();
   }
 
   @override
@@ -77,7 +78,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: _colorBar1,
+        backgroundColor: _colorTop,
         actions: [
           PopupMenuButton(
             itemBuilder: (context) {
@@ -92,155 +93,127 @@ class _MyHomePageState extends State<MyHomePage> {
                     }
                   },
                 ),
-                PopupMenuItem(
-                  child: const Text("Color"),
-                  onTap: () {
-                    if (_dayIndex == 0) {
-                      _colorBar1 = Colors.deepPurple.shade400;
-                    } else if (_dayIndex == 1) {
-                      _colorBar1 = Colors.green.shade400;
-                    } else if (_dayIndex == 2) {
-                      _colorBar1 = Colors.amber.shade600;
-                    } else if (_dayIndex == 3) {
-                      _colorBar1 = Colors.deepOrange.shade300;
-                    } else {
-                      _colorBar1 = Colors.indigo.shade400;
-                    }
-                    _dayIndex++;
-                    if (_dayIndex > 4) {
-                      _dayIndex = 0;
-                    }
-                    setState(() {});
-                  },
-                ),
               ];
             },
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(children: [
-            Container(
-              height: 200,
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              decoration: BoxDecoration(
-                // color: _colorBar,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    _colorBar1,
-                    _colorBar2,
-                  ],
+      body: Stack(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+                child: Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.only(top: 200),
+                  width: double.infinity,
+                  height: 5000,
+                  child: Column(children: [
+                    Text('latitude: $_latitude'),
+                    Text('longitude: $_longitude'),
+                    Text('fajr: ${DateFormat.Hm().format(_fajr)}'),
+                    Text('isyraq: ${DateFormat.Hm().format(_sunrise)}'),
+                    Text('dhuhr: ${DateFormat.Hm().format(_dhuhr)}'),
+                    Text('asr: ${DateFormat.Hm().format(_asr)}'),
+                    Text('maghrib: ${DateFormat.Hm().format(_maghrib)}'),
+                    Text('isha: ${DateFormat.Hm().format(_isha)}'),
+                    Text('midnight: ${DateFormat.Hm().format(_midnight)}'),
+                    Text('thirdnight: ${DateFormat.Hm().format(_latenight)}'),
+                    Text('qibla direction: $_qibla'),
+                  ]),
                 ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(25),
-                  bottomRight: Radius.circular(25),
-                ),
-              ),
-              child: Row(
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        '',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      Text(
-                        _nowEvent,
-                        style: const TextStyle(color: Colors.white),
-                        textScaleFactor: 2,
-                      ),
-                      Text(
-                        _nextEvent,
-                        style: const TextStyle(color: Colors.white),
-                      ),
+              ],
+            )),
+          ),
+          Stack(
+            children: [
+              Container(
+                height: 120,
+                padding: const EdgeInsets.symmetric(horizontal: 15),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      _colorTop,
+                      _colorBottom,
                     ],
                   ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          _cityName,
-                          style: const TextStyle(color: Colors.white),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.elliptical(100, 25),
+                    bottomRight: Radius.elliptical(100, 25),
+                  ),
+                ),
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _nowEvent,
+                              textScaleFactor: 2,
+                            ),
+                            Text(
+                              _nextEvent,
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            _cityName,
+                          ),
+                        ],
+                      ),
+                    ]),
+              ),
+              Positioned(
+                // top: 20,
+                child: Container(
+                  height: 70,
+                  margin: const EdgeInsets.only(
+                      left: 25, right: 25, top: 60, bottom: 5),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: const Color(0x19000000)),
+                    borderRadius: const BorderRadius.all(Radius.circular(15)),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0x55ffffff), Color(0xddeeeeee)],
                     ),
                   ),
-                ],
-              ),
-            ),
-            Text('latitude: $_latitude'),
-            Text('longitude: $_longitude'),
-            Text('fajr: ${DateFormat.Hm().format(_fajrTime)}'),
-            Text('isyraq: ${DateFormat.Hm().format(_isyraqTime)}'),
-            Text('dhuhr: ${DateFormat.Hm().format(_dhuhrTime)}'),
-            Text('asr: ${DateFormat.Hm().format(_asrTime)}'),
-            Text('maghrib: ${DateFormat.Hm().format(_maghribTime)}'),
-            Text('isha: ${DateFormat.Hm().format(_ishaTime)}'),
-            Text('midnight: ${DateFormat.Hm().format(_midNight)}'),
-            Text('thirdnight: ${DateFormat.Hm().format(_thirdNight)}'),
-            Text('qibla direction: $_qibla'),
-            Container(
-              decoration: BoxDecoration(color: Colors.blueGrey),
-              height: 100,
-            ),
-            Container(
-              decoration: BoxDecoration(color: Colors.grey),
-              height: 100,
-            ),
-            Container(
-              decoration: BoxDecoration(color: Colors.blueGrey),
-              height: 100,
-            ),
-            Container(
-              decoration: BoxDecoration(color: Colors.grey),
-              height: 100,
-            ),
-            Container(
-              decoration: BoxDecoration(color: Colors.blueGrey),
-              height: 100,
-            ),
-            Container(
-              decoration: BoxDecoration(color: Colors.grey),
-              height: 100,
-            ),
-          ]),
-        ),
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Image.asset('assets/icon-kt.png'),
+                        ),
+                        const Text('b'),
+                        Padding(
+                          padding: const EdgeInsets.all(10.0),
+                          child: Image.asset('assets/icon-qc.png'),
+                        ),
+                        const Text('d'),
+                      ]),
+                ),
+              )
+            ],
+          ),
+        ],
       ),
     );
   }
 
   void initialization() async {
-    //### colorbar ###
-
-    int time = int.parse(DateFormat.H().format(DateTime.now()));
-    if (time >= 3 && time < 6) {
-      _colorBar1 = Colors.deepPurple.shade400;
-      _dayIndex = 0;
-    } else if (time >= 6 && time < 15) {
-      _colorBar1 = Colors.green.shade400;
-      _dayIndex = 1;
-    } else if (time >= 15 && time < 18) {
-      _colorBar1 = Colors.amber.shade600;
-      _dayIndex = 2;
-    } else if (time >= 18 && time < 20) {
-      _colorBar1 = Colors.deepOrange.shade400;
-      _colorBar2 = Colors.yellow.shade600;
-      _dayIndex = 3;
-    } else {
-      _colorBar1 = Colors.indigo.shade400;
-      _dayIndex = 4;
-    }
-
-    //### location ###
     Location location = Location();
     bool serviceEnabled;
     PermissionStatus permissionGranted;
-    LocationData locationData;
 
     serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) {
@@ -258,86 +231,119 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     }
 
-    locationData = await location.getLocation();
-    _latitude = locationData.latitude!;
-    _longitude = locationData.longitude!;
+    LocationData locationData = await location.getLocation();
 
-    List<gc.Placemark> placemarks =
-        await gc.placemarkFromCoordinates(_latitude, _longitude);
+    // print(locationData.latitude);
 
-    _cityName = placemarks.first.locality ?? '';
-
-    //### adhan ###
-
-    final myCoordinates = Coordinates(_latitude, _longitude);
+    final myCoordinates =
+        Coordinates(locationData.latitude!, locationData.longitude!);
     final params = CalculationMethod.singapore.getParameters();
     params.madhab = Madhab.shafi;
-    final prayerTimes = PrayerTimes.today(myCoordinates, params);
-    final sunnahTimes = SunnahTimes(prayerTimes);
-    final qibla = Qibla(myCoordinates);
+    var prayerTimes = PrayerTimes.today(myCoordinates, params);
+    var sunnahTimes = SunnahTimes(prayerTimes);
+    var qibla = Qibla(myCoordinates);
 
-    _fajrTime = prayerTimes.fajr;
-    _isyraqTime = prayerTimes.sunrise;
-    _dhuhrTime = prayerTimes.dhuhr;
-    _asrTime = prayerTimes.asr;
-    _maghribTime = prayerTimes.maghrib;
-    _ishaTime = prayerTimes.isha;
-    _midNight = sunnahTimes.middleOfTheNight;
-    _thirdNight = sunnahTimes.lastThirdOfTheNight;
-    _qibla = qibla.direction;
+    // print(qibla.direction);
+
+    List<gc.Placemark> placemarks = await gc.placemarkFromCoordinates(
+        locationData.latitude!, locationData.longitude!);
+
+    // print(placemarks.first.locality);
+
+    //
+
+    setState(() {
+      _latitude = locationData.latitude!;
+      _longitude = locationData.longitude!;
+      _fajr = prayerTimes.fajr;
+      _sunrise = prayerTimes.sunrise;
+      _dhuhr = prayerTimes.dhuhr;
+      _asr = prayerTimes.asr;
+      _maghrib = prayerTimes.maghrib;
+      _isha = prayerTimes.isha;
+      _midnight = sunnahTimes.middleOfTheNight;
+      _latenight = sunnahTimes.lastThirdOfTheNight;
+      _qibla = qibla.direction;
+      _cityName = placemarks.first.locality!;
+    });
 
     whatTime();
-
-    setState(() {});
 
     FlutterNativeSplash.remove();
   }
 
   void whatTime() {
-    //### whatime ###
     final now = DateTime.now();
     Duration nextDuration = Duration.zero;
     String nextEventName = '';
 
-    if (now.isBefore(_isyraqTime)) {
-      _nowEvent = 'Subuh';
-      nextEventName = 'Isyraq';
-      nextDuration = _isyraqTime.difference(now);
-    } else if (now.isBefore(_isyraqTime.add(const Duration(minutes: 15)))) {
-      nextDuration =
-          _isyraqTime.subtract(const Duration(minutes: 15)).difference(now);
-      _nowEvent = 'Isyraq';
-      nextEventName = 'Dhuha';
-    } else if (now.isBefore(_dhuhrTime.subtract(const Duration(minutes: 15)))) {
-      nextDuration = _dhuhrTime.difference(now);
-      _nowEvent = 'Dhuha';
-      nextEventName = 'Dzuhur';
-    } else if (now.isBefore(_asrTime)) {
-      nextDuration = _asrTime.difference(now);
-      _nowEvent = 'Dzuhur';
-      nextEventName = 'Ashar';
-    } else if (now.isBefore(_maghribTime)) {
-      nextDuration = _maghribTime.difference(now);
-      _nowEvent = 'Ashar';
-      nextEventName = 'Maghrib';
-    } else if (now.isBefore(_ishaTime)) {
-      nextDuration = _ishaTime.difference(now);
-      _nowEvent = 'Maghrib';
-      nextEventName = 'Isya';
-    } else {
-      _nowEvent = 'Isya';
-      nextEventName = 'Subuh';
-    }
+    setState(() {
+      if (now.isBefore(_sunrise)) {
+        _nowEvent = 'Subuh';
+        nextEventName = 'Isyraq';
+        nextDuration = _sunrise.difference(now);
+      } else if (now.isBefore(_sunrise.add(const Duration(minutes: 15)))) {
+        nextDuration =
+            _sunrise.subtract(const Duration(minutes: 15)).difference(now);
+        _nowEvent = 'Isyraq';
+        nextEventName = 'Dhuha';
+      } else if (now.isBefore(_dhuhr.subtract(const Duration(minutes: 15)))) {
+        nextDuration = _dhuhr.difference(now);
+        _nowEvent = 'Dhuha';
+        nextEventName = 'Dzuhur';
+      } else if (now.isBefore(_asr)) {
+        nextDuration = _asr.difference(now);
+        _nowEvent = 'Dzuhur';
+        nextEventName = 'Ashar';
+      } else if (now.isBefore(_maghrib)) {
+        nextDuration = _maghrib.difference(now);
+        _nowEvent = 'Ashar';
+        nextEventName = 'Maghrib';
+      } else if (now.isBefore(_isha)) {
+        nextDuration = _isha.difference(now);
+        _nowEvent = 'Maghrib';
+        nextEventName = 'Isya';
+      } else {
+        _nowEvent = 'Isya';
+        nextEventName = 'Subuh';
+        nextDuration = _fajr.difference(now);
+      }
 
-    if (nextDuration.inHours > 0) {
-      _nextEvent = '${nextDuration.inHours} jam ';
-    } else {
-      _nextEvent = '';
-    }
+      if (nextDuration.inHours > 0) {
+        _nextEvent = '${nextDuration.inHours} jam ';
+      } else {
+        _nextEvent = '';
+      }
+      if (nextDuration.inMinutes > 0) {
+        _nextEvent =
+            '$_nextEvent${(nextDuration.inMinutes - (nextDuration.inHours * 60))} menit $nextEventName';
+      }
+    });
+  }
 
-    if (nextDuration.inMinutes > 0) {
-      _nextEvent =
-          '$_nextEvent${(nextDuration.inMinutes - (nextDuration.inHours * 60))} menit $nextEventName';
-    }
+  void setColor() {
+    final time = int.parse(DateFormat.H().format(DateTime.now()));
+
+    setState(() {
+      if (time >= 3 && time < 6) {
+        _colorTop = const Color(0xff3684a8);
+        _colorBottom = const Color(0xffb0e2fb);
+      } else if (time >= 6 && time < 10) {
+        _colorTop = const Color(0xff4ea6bd);
+        _colorBottom = const Color(0xffccf556);
+      } else if (time >= 10 && time < 16) {
+        _colorTop = const Color(0xff67d3ef);
+        _colorBottom = const Color(0xffbdf9ff);
+      } else if (time >= 16 && time < 18) {
+        _colorTop = const Color(0xfffc7cac);
+        _colorBottom = const Color(0xfffef596);
+      } else if (time >= 18 && time < 20) {
+        _colorTop = const Color(0xff3a6b94);
+        _colorBottom = const Color(0xffcab6f1);
+      } else {
+        _colorTop = const Color(0xff192936);
+        _colorBottom = const Color(0xff274663);
+      }
+    });
   }
 }

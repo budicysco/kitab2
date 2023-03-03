@@ -27,6 +27,10 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/icon-kt.png
+    - assets/icon-pt.png
+    - assets/icon-qc.png
 
 flutter_native_splash:
   color: "#2ecc71"
