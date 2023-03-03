@@ -24,6 +24,8 @@ DateTime _fajr = DateTime.now(),
     _midnight = DateTime.now(),
     _latenight = DateTime.now();
 
+Timer? timer;
+
 void main() {
   runApp(const MyApp());
 }
@@ -58,17 +60,17 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  Timer? timer;
+  // Timer? timer;
 
   @override
   void initState() {
     setColor();
     initialization();
 
-    timer = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
-      // whatTime();
-      // setState(() {});
-    });
+    // timer = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
+    // whatTime();
+    // setState(() {});
+    // });
 
     super.initState();
   }
@@ -126,9 +128,10 @@ class _MyHomePageState extends State<MyHomePage> {
             )),
           ),
           Stack(
+            // alignment: Alignment.topCenter,
             children: [
               Container(
-                height: 120,
+                height: 100,
                 padding: const EdgeInsets.symmetric(horizontal: 15),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -140,8 +143,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                   borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.elliptical(100, 25),
-                    bottomRight: Radius.elliptical(100, 25),
+                    bottomLeft: Radius.elliptical(100, 50),
+                    bottomRight: Radius.elliptical(100, 50),
                   ),
                 ),
                 child: Row(
@@ -172,35 +175,39 @@ class _MyHomePageState extends State<MyHomePage> {
                     ]),
               ),
               Positioned(
-                // top: 20,
-                child: Container(
-                  height: 70,
-                  margin: const EdgeInsets.only(
-                      left: 25, right: 25, top: 60, bottom: 5),
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0x19000000)),
-                    borderRadius: const BorderRadius.all(Radius.circular(15)),
-                    gradient: const LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Color(0x55ffffff), Color(0xddeeeeee)],
+                // top: 0,
+                child: Align(
+                  alignment: Alignment.topCenter,
+                  child: Container(
+                    height: 70,
+                    margin: const EdgeInsets.only(top: 60, bottom: 5),
+                    width: 240,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: const Color(0x19000000)),
+                      borderRadius: const BorderRadius.all(Radius.circular(15)),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [Color(0x55ffffff), Color(0xddeeeeee)],
+                      ),
                     ),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Image.asset('assets/icon-kt.png'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Image.asset('assets/icon-pt.png'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(10.0),
+                            child: Image.asset('assets/icon-qc.png'),
+                          ),
+                        ]),
                   ),
-                  child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Image.asset('assets/icon-kt.png'),
-                        ),
-                        const Text('b'),
-                        Padding(
-                          padding: const EdgeInsets.all(10.0),
-                          child: Image.asset('assets/icon-qc.png'),
-                        ),
-                        const Text('d'),
-                      ]),
                 ),
               )
             ],
@@ -269,6 +276,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
     whatTime();
 
+    // timer = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
+    //   whatTime();
+    //   // setState(() {});
+    // });
+
     FlutterNativeSplash.remove();
   }
 
@@ -306,6 +318,9 @@ class _MyHomePageState extends State<MyHomePage> {
       } else {
         _nowEvent = 'Isya';
         nextEventName = 'Subuh';
+        if (_fajr.isBefore(_isha)) {
+          _fajr = _fajr.add(const Duration(days: 1));
+        }
         nextDuration = _fajr.difference(now);
       }
 
