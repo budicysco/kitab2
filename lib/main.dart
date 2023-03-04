@@ -24,8 +24,6 @@ DateTime _fajr = DateTime.now(),
     _midnight = DateTime.now(),
     _latenight = DateTime.now();
 
-Timer? timer;
-
 void main() {
   runApp(const MyApp());
 }
@@ -60,17 +58,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  // Timer? timer;
-
   @override
   void initState() {
     setColor();
     initialization();
 
-    // timer = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
-    // whatTime();
-    // setState(() {});
-    // });
+    Timer.periodic(const Duration(minutes: 1), (timer) {
+      whatTime();
+    });
 
     super.initState();
   }
@@ -102,31 +97,32 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Stack(
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-                child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.only(top: 200),
-                  width: double.infinity,
-                  height: 5000,
-                  child: Column(children: [
-                    Text('latitude: $_latitude'),
-                    Text('longitude: $_longitude'),
-                    Text('fajr: ${DateFormat.Hm().format(_fajr)}'),
-                    Text('isyraq: ${DateFormat.Hm().format(_sunrise)}'),
-                    Text('dhuhr: ${DateFormat.Hm().format(_dhuhr)}'),
-                    Text('asr: ${DateFormat.Hm().format(_asr)}'),
-                    Text('maghrib: ${DateFormat.Hm().format(_maghrib)}'),
-                    Text('isha: ${DateFormat.Hm().format(_isha)}'),
-                    Text('midnight: ${DateFormat.Hm().format(_midnight)}'),
-                    Text('thirdnight: ${DateFormat.Hm().format(_latenight)}'),
-                    Text('qibla direction: $_qibla'),
-                  ]),
-                ),
-              ],
-            )),
-          ),
+          // Expanded(
+          // child:
+          SingleChildScrollView(
+              child: Column(
+            children: [
+              Container(
+                padding: const EdgeInsets.only(top: 200),
+                width: double.infinity,
+                height: 5000,
+                child: Column(children: [
+                  Text('latitude: $_latitude'),
+                  Text('longitude: $_longitude'),
+                  Text('fajr: ${DateFormat.Hm().format(_fajr)}'),
+                  Text('isyraq: ${DateFormat.Hm().format(_sunrise)}'),
+                  Text('dhuhr: ${DateFormat.Hm().format(_dhuhr)}'),
+                  Text('asr: ${DateFormat.Hm().format(_asr)}'),
+                  Text('maghrib: ${DateFormat.Hm().format(_maghrib)}'),
+                  Text('isha: ${DateFormat.Hm().format(_isha)}'),
+                  Text('midnight: ${DateFormat.Hm().format(_midnight)}'),
+                  Text('thirdnight: ${DateFormat.Hm().format(_latenight)}'),
+                  Text('qibla direction: $_qibla'),
+                ]),
+              ),
+            ],
+          )),
+          // ),
           Stack(
             // alignment: Alignment.topCenter,
             children: [
@@ -157,9 +153,11 @@ class _MyHomePageState extends State<MyHomePage> {
                             Text(
                               _nowEvent,
                               textScaleFactor: 2,
+                              style: const TextStyle(color: Colors.black),
                             ),
                             Text(
                               _nextEvent,
+                              style: const TextStyle(color: Colors.black),
                             ),
                           ],
                         ),
@@ -169,6 +167,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         children: [
                           Text(
                             _cityName,
+                            style: const TextStyle(color: Colors.black),
                           ),
                         ],
                       ),
@@ -218,50 +217,28 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void initialization() async {
-    Location location = Location();
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
+    LocationData locationData = await getLocation();
 
-    serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) {
-        return;
-      }
-    }
+    setState(() {
+      _latitude = locationData.latitude!;
+      _longitude = locationData.longitude!;
+    });
 
-    permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        return;
-      }
-    }
+    List<gc.Placemark> placemarks =
+        await gc.placemarkFromCoordinates(_latitude, _longitude);
 
-    LocationData locationData = await location.getLocation();
+    setState(() {
+      _cityName = placemarks.first.locality!;
+    });
 
-    // print(locationData.latitude);
-
-    final myCoordinates =
-        Coordinates(locationData.latitude!, locationData.longitude!);
+    final myCoordinates = Coordinates(_latitude, _longitude);
     final params = CalculationMethod.singapore.getParameters();
     params.madhab = Madhab.shafi;
     var prayerTimes = PrayerTimes.today(myCoordinates, params);
     var sunnahTimes = SunnahTimes(prayerTimes);
     var qibla = Qibla(myCoordinates);
 
-    // print(qibla.direction);
-
-    List<gc.Placemark> placemarks = await gc.placemarkFromCoordinates(
-        locationData.latitude!, locationData.longitude!);
-
-    // print(placemarks.first.locality);
-
-    //
-
     setState(() {
-      _latitude = locationData.latitude!;
-      _longitude = locationData.longitude!;
       _fajr = prayerTimes.fajr;
       _sunrise = prayerTimes.sunrise;
       _dhuhr = prayerTimes.dhuhr;
@@ -271,23 +248,38 @@ class _MyHomePageState extends State<MyHomePage> {
       _midnight = sunnahTimes.middleOfTheNight;
       _latenight = sunnahTimes.lastThirdOfTheNight;
       _qibla = qibla.direction;
-      _cityName = placemarks.first.locality!;
     });
 
     whatTime();
-
-    // timer = Timer.periodic(const Duration(minutes: 1), (Timer timer) {
-    //   whatTime();
-    //   // setState(() {});
-    // });
 
     FlutterNativeSplash.remove();
   }
 
   void whatTime() {
+    final myCoordinates = Coordinates(_latitude, _longitude);
+    final params = CalculationMethod.singapore.getParameters();
+    params.madhab = Madhab.shafi;
+    var prayerTimes = PrayerTimes.today(myCoordinates, params);
+    var sunnahTimes = SunnahTimes(prayerTimes);
+    var qibla = Qibla(myCoordinates);
+
+    setState(() {
+      _fajr = prayerTimes.fajr;
+      _sunrise = prayerTimes.sunrise;
+      _dhuhr = prayerTimes.dhuhr;
+      _asr = prayerTimes.asr;
+      _maghrib = prayerTimes.maghrib;
+      _isha = prayerTimes.isha;
+      _midnight = sunnahTimes.middleOfTheNight;
+      _latenight = sunnahTimes.lastThirdOfTheNight;
+      _qibla = qibla.direction;
+    });
+
     final now = DateTime.now();
     Duration nextDuration = Duration.zero;
     String nextEventName = '';
+
+    print(now.toString());
 
     setState(() {
       if (now.isBefore(_sunrise)) {
@@ -338,14 +330,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void setColor() {
     final time = int.parse(DateFormat.H().format(DateTime.now()));
-
+    // final dark = 999999;
     setState(() {
       if (time >= 3 && time < 6) {
         _colorTop = const Color(0xff3684a8);
         _colorBottom = const Color(0xffb0e2fb);
       } else if (time >= 6 && time < 10) {
         _colorTop = const Color(0xff4ea6bd);
-        _colorBottom = const Color(0xffccf556);
+        _colorBottom = const Color(0xffccf556 - 999999);
       } else if (time >= 10 && time < 16) {
         _colorTop = const Color(0xff67d3ef);
         _colorBottom = const Color(0xffbdf9ff);
@@ -361,4 +353,30 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
   }
+}
+
+Future<LocationData> getLocation() async {
+  Location location = Location();
+  bool serviceEnabled;
+  PermissionStatus permissionGranted;
+
+  serviceEnabled = await location.serviceEnabled();
+  if (!serviceEnabled) {
+    serviceEnabled = await location.requestService();
+    if (!serviceEnabled) {
+      // return;
+    }
+  }
+
+  permissionGranted = await location.hasPermission();
+  if (permissionGranted == PermissionStatus.denied) {
+    permissionGranted = await location.requestPermission();
+    if (permissionGranted != PermissionStatus.granted) {
+      // return;
+    }
+  }
+
+  LocationData locationData = await location.getLocation();
+
+  return locationData;
 }
